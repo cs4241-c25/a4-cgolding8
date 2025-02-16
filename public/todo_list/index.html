@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>CS4241 Assignment 3</title>
+		<meta charset="utf-8">
+		<script src="js/main.js"></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="A customizable To Do List that lets you record what you need to do">
+		<link rel="stylesheet" href="css/main.css">
+
+		<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+	</head>
+
+	<body>
+		<h1>Welcome to To-Do List!</h1>
+
+		<form>
+			<div class="form-element">
+				<label for="TDdescription">Event Description: </label><br>
+				<input type="text" id="TDdescription" placeholder="What do you have to do?" required>
+			</div>
+
+			<div class="form-element">
+				<label for="TDdate">Date Assigned: </label><br>
+				<input type="Date" id="TDdate" required>
+			</div>
+
+			<div class="form-element">
+				<label for="TDpriority">Event Priority: </label><br>
+				<select name="priority" id="TDpriority" required>
+					<option value="" selected="selected" disabled="disabled">Choose an option</option>
+					<option value="urgent">Urgent</option>
+					<option value="high">High</option>
+					<option value="medium">Medium</option>
+					<option value="low">Low</option>
+				</select>
+			</div>
+
+			<button id="submit-btn">Submit</button>
+		</form>
+		<p id="editing-p"></p>
+
+		<!-- Clear float style -->
+		<br style="clear:both;">
+
+		<h2>Your To Do List:</h2>
+
+		<table id="sortedList">
+			<tr>
+				<th class="TDdescription"><p class="header-row">Event</p></th>
+				<th class="TDdate"><p class="header-row">Start Date</p></th>
+				<th class="TDdueDate"><p class="header-row">Due Date</p></th>
+				<th class="TDpriority"><p class="header-row">Priority</p></th>
+				<th class="edit-col"></th>
+				<th class="del-col"></th>
+			</tr>
+		</table>
+
+	</body>
+</html>
