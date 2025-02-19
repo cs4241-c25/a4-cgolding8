@@ -6,61 +6,59 @@ var path = require('path');
 const passport = require('passport');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const GitHubStrategy = require('passport-github2').Strategy;
-const dotenv = require('dotenv').config({path: `${__dirname}/secrets.env`});
-
-// Destructure process.env to get nice to read variable names
-const {
-	MONGO_USER,
-	MONGO_PASS,
-	MONGO_HOST,
-	MONGO_DBNAME,
-	MONGO_DBCOLLECTION,
-	GITHUB_CLIENT_ID,
-	GITHUB_CLIENT_SECRET,
-	EXPRESS_SESSION_SECRET
-} = process.env;
+const LocalStrategy = require('passport-local').Strategy
 
 app.use('/login', express.static(path.join(__dirname, 'public', 'login')));
 app.use('/todo', express.static(path.join(__dirname, 'public', 'todo_list')));
 app.use(express.json());
 
-const url = `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@${MONGO_HOST}`;
+const url = "mongodb+srv://colemgolding:3UlNRKYePSaOaKw6@assignment-a3.llq9g.mongodb.net/?retryWrites=true&w=majority&appName=Assignment-A3";
 const dbconnect = new MongoClient(url);
 let collection = null;
+let log_collection = null;
 
 async function run() {
 	await dbconnect.connect().then(() => console.log("Connected!"));
-	collection = await dbconnect.db(MONGO_DBNAME).collection(MONGO_DBCOLLECTION);
+	collection = await dbconnect.db("user_data").collection("todo_lists");
+	log_collection = await dbconnect.db("user_data").collection("logins");
 
 	// Passport setup
 	app.use(session({
-		secret: EXPRESS_SESSION_SECRET,
-		resave: false,
-		saveUninitialized: false
-	}));
+    secret: "secret",
+    resave: false ,
+    saveUninitialized: true ,
+	}))
 
 	app.use(passport.initialize());
 	app.use(passport.session())
 
-	passport.use(new GitHubStrategy({
-			clientID: GITHUB_CLIENT_ID,
-			clientSecret: GITHUB_CLIENT_SECRET
+	passport.use(new LocalStrategy({
+			username: 'username',
+			password: 'password'
 		},
-		async function (accessToken, refreshToken, profile, done) {
-			// This code will run when the user is successfully logged in with GitHub.
-			process.nextTick(function () {
-				return done(null, profile);
-			});
-		}
-	));
+		async function verify(username, password, done) {
+			let user = await log_collection.findOne({ username: username });
 
-	passport.serializeUser(function (user, done) {
-    done(null, { username: user.username, id: user._id || user.id });
+			if (user == null) {
+				await log_collection.insertOne({ username: username, password: password });
+				let new_user = await log_collection.findOne({ username: username });
+				return done(null, new_user);
+			}
+			else if (user.password != password) {
+				return done(null, false);
+			}
+			else {
+				return done(null, user);
+			}
+		}
+	))
+
+	passport.serializeUser((user, done) => {
+		done(null, user);
 	});
 
-	passport.deserializeUser(function (obj, done) {
-    done(null, obj);
+	passport.deserializeUser((user, done) => {
+		done (null, user);
 	});
 
 	app.get('/', function(req, res){
@@ -69,35 +67,20 @@ async function run() {
 
 	// Login Page
 	app.use('/login', (req, res, next) => {
-		// User is logged in
-    if (req.user) {
-			window.sessionStorage.setItem("id", req.user.username);
-			res.redirect("/todo");
-    } else {
-      next();
-    }
+		next();
 	})
 
-	app.get('/auth/github/callback',
-    passport.authenticate('github', { session: true, failureRedirect: '/login' }),
-    function (req, res) {
-			// Successful authentication, redirect home.
-			res.redirect('/todo');
-    }
-	);
-
-	app.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
-
-	function ensureAuth(req, res, next) {
-    if (req.isAuthenticated()) {
-      next();
-    } else {
-      res.redirect("/login");
-    }
-	}
+	app.post('/login-attempt', function (req, res, next) {
+		passport.authenticate("local", function (err, user, info) {
+			if (!user) {
+				return res.status(302).json({ redirectUrl: "/login" });
+			}
+			return res.status(302).json({ redirectUrl: "/todo " + user._id });
+		})(req, res, next);
+	});
 	
 	// To Do List Page
-	app.use('/todo', ensureAuth, async (req, res, next) => {
+	app.use('/todo', async (req, res, next) => {
 		res.json(await collection.find({}));
 		next();
 	})
@@ -183,8 +166,8 @@ async function run() {
 
 			const mod_row = await collection.updateOne({'_id': id}, {$set :{
 				TDdescription: json.TDdescription,
-				TDdueDate: json.TDdate,
-				TDpriority: json.TDpriority
+  			TDdueDate: json.TDdate,
+  			TDpriority: json.TDpriority
 			}});
 
 			res.end("modified");

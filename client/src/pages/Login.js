@@ -1,4 +1,5 @@
 import './../css/index.login.css';
+import LoginForm from './../components/LoginForm.js';
 
 function Login() {
 	return (
@@ -7,7 +8,9 @@ function Login() {
 				<h1>To Do List</h1>
 				<h2>Enter your login credentials</h2>
 
-				<a href="/auth/github"><button id="githubButton"><h3>Login with GitHub</h3></button></a>
+				<LoginForm/>
+
+				<p>If you do not have an account, one will be made for you!</p>
 			</div>
 		</div>
 	);
