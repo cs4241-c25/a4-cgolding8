@@ -8,5 +8,8 @@
     "passport-github2": "^0.1.12",
     "passport-local": "^1.0.0",
     "react-router-dom": "^7.1.5"
-  }
+  },
+	"scripts": {
+		"start":"node app.js"
+	}
 }
